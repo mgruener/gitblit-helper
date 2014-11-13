@@ -1,0 +1,74 @@
+#!/bin/bash
+
+MYNAME=$(basename "${0}")
+USER="${USER}"
+SERVER="$(hostname --fqdn)"
+PROJECT=""
+HTTPPORT="8443"
+SSHPORT="29418"
+
+function usage {
+  echo "Usage: ${MYNAME} [-u <username>] [-p <project>] [-s <server>] [-x <httpport>] [-y <sshport>] -- <githuburl>"
+  exit 1
+}
+
+if [ $# -eq 0 ]; then
+  usage
+fi
+
+
+while getopts ":hu:p:s:x:y:" opt; do
+  case ${opt} in
+    h)
+      usage
+      ;;
+    u)
+      USER=${OPTARG}
+      ;;
+    p)
+      PROJECT="/${OPTARG}"
+      ;;
+    s)
+      SERVER=${OPTARG}
+      ;;
+    x)
+      HTTPPORT=${OPTARG}
+      ;;
+    y)
+      SSHPORT=${OPTARG}
+      ;;
+    \?)
+      echo "Invalid option: -${OPTARG}" >&2
+      usage
+      ;;
+  esac
+done
+
+shift $((OPTIND-1))
+UPSTREAMURL=$1
+
+if [ -z "${UPSTREAMURL}" ]; then
+  echo "No repository name provided" >&2
+  usage
+fi
+
+REPO=$(basename "${UPSTREAMURL}" .git)
+
+HTTPURL="https://${USER}@${SERVER}:${HTTPPORT}/r${PROJECT}/${REPO}.git"
+SSHURL="ssh://${USER}@${SERVER}:${SSHPORT}${PROJECT}/${REPO}.git"
+
+# pull in the github repository
+git clone ${UPSTREAMURL}
+cd ${REPO}
+git remote rename origin github
+
+# add the gitblit http remote to create the gitblit remote
+# repository on the fly
+git remote add -m master gitblit ${HTTPURL}
+git push gitblit master
+
+# switch the gitblit remote to ssh so we can use ssh keys
+git remote set-url gitblit "${SSHURL}"
+
+# "git pull" shall pull the master branch from github
+git branch -u github/master master
