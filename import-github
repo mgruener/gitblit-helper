@@ -58,7 +58,7 @@ HTTPURL="https://${USER}@${SERVER}:${HTTPPORT}/r${PROJECT}/${REPO}.git"
 SSHURL="ssh://${USER}@${SERVER}:${SSHPORT}${PROJECT}/${REPO}.git"
 
 # pull in the github repository
-git clone ${UPSTREAMURL}
+git clone --recursive ${UPSTREAMURL}
 cd ${REPO}
 git remote rename origin github
 

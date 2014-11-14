@@ -56,7 +56,7 @@ SSHURL="ssh://${USER}@${SERVER}:${SSHPORT}${PROJECT}/${REPO}.git"
 GITHUBURL="git@github.com:${USER}/${REPO}.git"
 
 # pull in the gitblit repository
-git clone ${SSHURL}
+git clone --recursive ${SSHURL}
 if [ $? -ne 0 ]; then
   echo "Failed to clone repository from ${SSHURL}"
   exit 1
